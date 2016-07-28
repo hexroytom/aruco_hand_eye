@@ -1,0 +1,23 @@
+<launch>
+  <!-- The end-effector frame_id -->
+  <arg name="ee_frame" default="modular_end_effector"/>
+
+  <!-- Bring up a kinect -->
+  <include file="$(find openni2_launch)/launch/openni2.launch">
+    <arg name="depth_registration" value="true"/>
+  </include>
+
+  <!-- Calibrate the extrinsics for a carmine 1.09 mounted to a robot end effector -->
+  <include file="$(find aruco_hand_eye)/launch/aruco_hand_eye.launch">
+    <arg name="markerid"   value="2"/>
+    <arg name="markersize" value="0.107"/>
+    <arg name="publish_tf" value="true"/>
+
+    <arg name="marker_parent_frame" value="/world"/>
+    <arg name="camera_parent_frame" value="$(arg ee_frame)"/>
+    <arg name="camera" value="/camera/rgb"/>
+
+    <arg name="camera_frame" value="/camera_rgb_optical_frame"/>
+  </include>
+
+</launch>
