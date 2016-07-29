@@ -16,6 +16,8 @@ from tf import transformations
 class MoHandEyeCalibrator(object):
     def __init__(self,cam_marker_file,base_ee_file):        
         
+        self.ready=False        
+        
         #save file names
         self.name_cam_marker_file=cam_marker_file 
         self.name_base_ee_file=base_ee_file
@@ -37,10 +39,16 @@ class MoHandEyeCalibrator(object):
         if self.num_of_cam_marker_poses != self.num_of_base_ee_poses:
             print 'number of camera-marker poses not equal to number of base-ee poses!\n'
             print 'please ctrl+c to exit\n'
+            self.read=False
         
         #initiate ee poses w.r.t base
         self.base_ee_samples=TransformArray()
-        self.base_ee_samples.header.frame_id="/base"        
+        self.base_ee_samples.header.frame_id="/base"
+        
+        rospy.wait_for_service('compute_effector_camera_quick')
+        print 'waiting for service to be available '
+        self.calibrate=rospy.ServiceProxy('compute_effector_camera_quick',compute_effector_camera_quick)
+        print 'service server is ready'        
         
     def read_files(self):
         
@@ -105,6 +113,21 @@ class MoHandEyeCalibrator(object):
             self.base_ee_samples.transforms.append(transform)
         
         #print self.base_ee_samples
+        self.ready=True
+
+    def compute_calibration(self):
+        if self.ready == False:
+            print 'Sorry,your files are not ready for calibration!'
+            return
+        try:
+            result = self.calibrate(self.camera_marker_samples,self.base_ee_samples)
+        except rospy.ServiceException as ex:
+            print 'Calibration failed: '+str(ex)
+            
+        print result.effector_camera.translation
+        print result.effector_camera.rotation
+        
+            
 
                 
 
